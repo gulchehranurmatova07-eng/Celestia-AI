@@ -43,11 +43,11 @@ export function AuthCard({ title, subtitle, children }: { title: string; subtitl
   );
 }
 
-function Field({ label, ...rest }: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
+function Field({ label, className = "", ...rest }: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   return (
     <label className="block text-[13px] text-mist">
       {label}
-      <input {...rest} className="admin-input mt-1.5 h-10 w-full text-[14px]" />
+      <input {...rest} className={`admin-input mt-1.5 h-10 w-full text-[14px] ${className}`} />
     </label>
   );
 }
@@ -117,7 +117,21 @@ export function SetupForm() {
         if (!mismatch) submit({ token: v.token, name: v.name, email: v.email, password: v.password });
       }}
     >
-      <Field label="Setup token (ADMIN_SETUP_TOKEN)" type="password" autoComplete="off" required value={v.token} onChange={set("token")} />
+      {/* Plain text on purpose: browsers autofill saved passwords into password fields, which made the token look "incorrect". */}
+      <Field
+        label="Setup token (ADMIN_SETUP_TOKEN)"
+        type="text"
+        name="setup-token"
+        autoComplete="off"
+        autoCapitalize="off"
+        autoCorrect="off"
+        spellCheck={false}
+        required
+        value={v.token}
+        onChange={(e) => setV({ ...v, token: e.target.value.trim() })}
+        className="font-mono"
+      />
+      {v.token && <p className="-mt-2 text-[11.5px] text-mist">{v.token.length} characters entered</p>}
       <Field label="Your name" required maxLength={80} value={v.name} onChange={set("name")} />
       <Field label="Email" type="email" autoComplete="username" required value={v.email} onChange={set("email")} />
       <Field label="Password (min. 12 characters)" type="password" autoComplete="new-password" required minLength={12} value={v.password} onChange={set("password")} />
