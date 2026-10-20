@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MAX_HISTORY_MESSAGES, MAX_MESSAGE_CHARS, type ChatTurn, type ErrorCode, type StreamEvent } from "./chatProtocol";
 import type { LangCode } from "./i18n";
+import { sessionId } from "./telemetry";
 
 export type UiMessage = {
   id: string;
@@ -10,6 +11,8 @@ export type UiMessage = {
   content: string;
   status: "streaming" | "done" | "error";
   error?: ErrorCode | "network";
+  /** Server reference for support/diagnostics when a request fails. */
+  requestId?: string;
 };
 
 let counter = 0;
@@ -50,24 +53,25 @@ export function useChat(lang: LangCode) {
   }, []);
 
   const run = useCallback(
-    async (history: ChatTurn[], assistantId: string) => {
+    async (history: ChatTurn[], assistantId: string, langOverride?: LangCode) => {
       const controller = new AbortController();
       abortRef.current = controller;
       setPending(true);
 
-      const fail = (code: UiMessage["error"]) => patch(assistantId, { status: "error", error: code });
+      const fail = (code: UiMessage["error"], requestId?: string) =>
+        patch(assistantId, { status: "error", error: code, requestId });
 
       try {
         const res = await fetch("/api/chat", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: history, lang: langRef.current }),
+          headers: { "Content-Type": "application/json", "X-Celestia-Session": sessionId() },
+          body: JSON.stringify({ messages: history, lang: langOverride ?? langRef.current }),
           signal: controller.signal,
         });
 
         if (!res.ok || !res.body) {
-          const data = (await res.json().catch(() => null)) as { error?: ErrorCode } | null;
-          fail(data?.error ?? (res.status === 429 ? "rate_limited" : "server"));
+          const data = (await res.json().catch(() => null)) as { error?: ErrorCode; requestId?: string } | null;
+          fail(data?.error ?? (res.status === 429 ? "rate_limited" : "server"), data?.requestId ?? res.headers.get("X-Request-Id") ?? undefined);
           return;
         }
 
@@ -94,7 +98,7 @@ export function useChat(lang: LangCode) {
               setJustAnswered((n) => n + 1);
             } else if (event.type === "error") {
               finished = true;
-              fail(event.code);
+              fail(event.code, event.requestId);
             }
           }
         }
@@ -113,14 +117,14 @@ export function useChat(lang: LangCode) {
   );
 
   const send = useCallback(
-    (raw: string) => {
+    (raw: string, langOverride?: LangCode) => {
       const text = raw.trim().slice(0, MAX_MESSAGE_CHARS);
       if (!text || abortRef.current) return;
       const history = toHistory(messagesRef.current);
       const userMsg: UiMessage = { id: newId(), role: "user", content: text, status: "done" };
       const assistantMsg: UiMessage = { id: newId(), role: "assistant", content: "", status: "streaming" };
       setMessages((prev) => [...prev, userMsg, assistantMsg]);
-      void run([...history, { role: "user", content: text }], assistantMsg.id);
+      void run([...history, { role: "user", content: text }], assistantMsg.id, langOverride);
     },
     [run],
   );
@@ -133,7 +137,7 @@ export function useChat(lang: LangCode) {
     const prevUser = all[all.length - 2];
     if (!last || last.role !== "assistant" || last.status !== "error" || prevUser?.role !== "user") return;
     const history = toHistory(all.slice(0, -2));
-    patch(last.id, { status: "streaming", content: "", error: undefined });
+    patch(last.id, { status: "streaming", content: "", error: undefined, requestId: undefined });
     void run([...history, { role: "user", content: prevUser.content }], last.id);
   }, [patch, run]);
 

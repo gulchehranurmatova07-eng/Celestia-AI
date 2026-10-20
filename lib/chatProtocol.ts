@@ -9,6 +9,7 @@ export type ChatTurn = { role: ChatRole; content: string };
 
 export type ErrorCode =
   | "not_configured"
+  | "maintenance"
   | "rate_limited"
   | "invalid_request"
   | "too_long"
@@ -20,4 +21,4 @@ export type ErrorCode =
 export type StreamEvent =
   | { type: "delta"; text: string }
   | { type: "done" }
-  | { type: "error"; code: ErrorCode };
+  | { type: "error"; code: ErrorCode; requestId?: string };

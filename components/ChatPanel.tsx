@@ -5,6 +5,7 @@ import { forwardRef, type ReactNode, useEffect, useImperativeHandle, useMemo, us
 import { CONTACT, PORTFOLIO_URL } from "@/lib/config";
 import { MAX_MESSAGE_CHARS } from "@/lib/chatProtocol";
 import type { Dictionary, LangCode } from "@/lib/i18n";
+import { track } from "@/lib/telemetry";
 import type { UiMessage, useChat } from "@/lib/useChat";
 import {
   CheckIcon,
@@ -88,6 +89,14 @@ export const ChatPanel = forwardRef<ChatPanelHandle, Props>(function ChatPanel(
     last.status === "done" &&
     (answered >= 2 || messages.some((m) => m.role === "user" && PRICE_INTENT.test(m.content)));
 
+  const ctaTracked = useRef(false);
+  useEffect(() => {
+    if (showCta && !ctaTracked.current) {
+      ctaTracked.current = true;
+      track("cta_shown");
+    }
+  }, [showCta]);
+
   const followUps = useMemo(() => {
     const asked = new Set(messages.filter((m) => m.role === "user").map((m) => m.content.toLowerCase()));
     const pool = t.followUps.filter((q) => !asked.has(q.toLowerCase()));
@@ -95,8 +104,9 @@ export const ChatPanel = forwardRef<ChatPanelHandle, Props>(function ChatPanel(
     return [...pool.slice(start), ...pool.slice(0, start)].slice(0, 3);
   }, [messages, t.followUps, answered]);
 
-  const submit = (text: string) => {
+  const submit = (text: string, source: "typed" | "suggestion" | "follow_up" | "cta" = "typed") => {
     if (!text.trim() || pending) return;
+    track("message_sent", { source });
     stickToBottom.current = true;
     setContactOpen(false);
     setPortfolioNote(false);
@@ -106,6 +116,7 @@ export const ChatPanel = forwardRef<ChatPanelHandle, Props>(function ChatPanel(
   };
 
   const onClear = () => {
+    track("chat_cleared");
     clear();
     setCtaHidden(false);
     setContactOpen(false);
@@ -123,6 +134,8 @@ export const ChatPanel = forwardRef<ChatPanelHandle, Props>(function ChatPanel(
         return t.errTooLong;
       case "refused":
         return t.errRefused;
+      case "maintenance":
+        return t.errMaintenance;
       default:
         return t.errServer;
     }
@@ -194,7 +207,7 @@ export const ChatPanel = forwardRef<ChatPanelHandle, Props>(function ChatPanel(
         {messages.length === 0 && (
           <div className="flex flex-wrap gap-2 pl-11">
             {t.suggestions.map((q) => (
-              <button key={q} type="button" onClick={() => submit(q)} className="chip rounded-full px-3.5 py-2 text-left text-[13px] text-ink/90">
+              <button key={q} type="button" onClick={() => submit(q, "suggestion")} className="chip rounded-full px-3.5 py-2 text-left text-[13px] text-ink/90">
                 {q}
               </button>
             ))}
@@ -220,9 +233,19 @@ export const ChatPanel = forwardRef<ChatPanelHandle, Props>(function ChatPanel(
                   )}
                   {m.error === "not_configured" ? (
                     <SetupNotice t={t} mailto={mailto} />
+                  ) : m.error === "maintenance" ? (
+                    <div>
+                      <p>{t.errMaintenance}</p>
+                      <ContactLinks t={{ ...t, discussText: "" }} mailto={mailto} className="mt-2" />
+                    </div>
                   ) : (
                     <div className="flex flex-wrap items-center gap-3">
                       <p className="text-[#ffb4b4]">{errorText(m)}</p>
+                      {m.requestId && (
+                        <p className="w-full text-[11px] text-mist/70">
+                          {t.errReference}: <span className="font-mono">{m.requestId.slice(0, 8)}</span>
+                        </p>
+                      )}
                       {i === messages.length - 1 && m.error !== "refused" && (
                         <button
                           type="button"
@@ -261,16 +284,31 @@ export const ChatPanel = forwardRef<ChatPanelHandle, Props>(function ChatPanel(
             <div className="mt-3 flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() => setContactOpen((o) => !o)}
+                onClick={() => {
+                  if (!contactOpen) track("cta_clicked", { cta: "discuss" });
+                  setContactOpen((o) => !o);
+                }}
                 aria-expanded={contactOpen}
                 className="btn-primary rounded-full px-3.5 py-2 text-[13px] font-medium text-white"
               >
                 {t.ctaDiscuss}
               </button>
-              <button type="button" onClick={() => submit(t.exploreMessage)} className="chip rounded-full px-3.5 py-2 text-[13px]">
+              <button
+                type="button"
+                onClick={() => {
+                  track("cta_clicked", { cta: "explore" });
+                  submit(t.exploreMessage, "cta");
+                }}
+                className="chip rounded-full px-3.5 py-2 text-[13px]">
                 {t.ctaExplore}
               </button>
-              <button type="button" onClick={() => submit(t.estimateMessage)} className="chip rounded-full px-3.5 py-2 text-[13px]">
+              <button
+                type="button"
+                onClick={() => {
+                  track("cta_clicked", { cta: "estimate" });
+                  submit(t.estimateMessage, "cta");
+                }}
+                className="chip rounded-full px-3.5 py-2 text-[13px]">
                 {t.ctaEstimate}
               </button>
               {PORTFOLIO_URL ? (
@@ -285,7 +323,10 @@ export const ChatPanel = forwardRef<ChatPanelHandle, Props>(function ChatPanel(
               ) : (
                 <button
                   type="button"
-                  onClick={() => setPortfolioNote((o) => !o)}
+                  onClick={() => {
+                    if (!portfolioNote) track("cta_clicked", { cta: "portfolio" });
+                    setPortfolioNote((o) => !o);
+                  }}
                   aria-expanded={portfolioNote}
                   className="chip rounded-full px-3.5 py-2 text-[13px]"
                 >
@@ -295,6 +336,7 @@ export const ChatPanel = forwardRef<ChatPanelHandle, Props>(function ChatPanel(
               <button
                 type="button"
                 onClick={() => {
+                  track("cta_clicked", { cta: "another" });
                   setCtaHidden(true);
                   inputRef.current?.focus();
                 }}
@@ -314,7 +356,7 @@ export const ChatPanel = forwardRef<ChatPanelHandle, Props>(function ChatPanel(
             <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.14em] text-mist/80">{t.followUpTitle}</p>
             <div className="flex flex-wrap gap-2">
               {followUps.map((q) => (
-                <button key={q} type="button" onClick={() => submit(q)} className="chip rounded-full px-3 py-1.5 text-left text-[13px] text-ink/90">
+                <button key={q} type="button" onClick={() => submit(q, "follow_up")} className="chip rounded-full px-3 py-1.5 text-left text-[13px] text-ink/90">
                   {q}
                 </button>
               ))}
@@ -396,6 +438,7 @@ function AssistantBubble({ children, copyText, t }: { children: ReactNode; copyT
             onClick={async () => {
               try {
                 await navigator.clipboard.writeText(copyText);
+                track("answer_copied");
                 setCopied(true);
                 setTimeout(() => setCopied(false), 1600);
               } catch {
@@ -446,14 +489,14 @@ function ContactLinks({ t, mailto, className = "" }: { t: Dictionary; mailto: st
     <div className={`space-y-2 ${className}`}>
       {t.discussText && <p className="text-sm text-mist">{t.discussText}</p>}
       <div className="flex flex-col gap-2">
-        <a href={mailto} className="chip flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm">
+        <a href={mailto} data-track-contact="email" data-track-place="chat" className="chip flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm">
           <MailIcon size={18} className="text-cyan" />
           <span className="min-w-0">
             <span className="block text-[11px] text-mist">{t.emailUs}</span>
             <span className="block truncate">{CONTACT.email}</span>
           </span>
         </a>
-        <a href={CONTACT.telegramUrl} target="_blank" rel="noopener noreferrer" className="chip flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm">
+        <a href={CONTACT.telegramUrl} data-track-contact="telegram" data-track-place="chat" target="_blank" rel="noopener noreferrer" className="chip flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm">
           <TelegramIcon size={18} className="text-cyan" />
           <span>
             <span className="block text-[11px] text-mist">{t.telegramUs}</span>

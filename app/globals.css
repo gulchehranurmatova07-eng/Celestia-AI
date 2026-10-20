@@ -407,3 +407,36 @@ body {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ── Admin control center ─────────────────────────────────────────── */
+
+@layer components {
+  .admin-root {
+    background:
+      radial-gradient(70% 40% at 60% -10%, rgb(23 107 255 / 0.1), transparent 70%),
+      #05080f;
+    min-height: 100dvh;
+  }
+  .admin-card {
+    background: linear-gradient(180deg, rgb(13 21 40 / 0.9), rgb(10 17 33 / 0.9));
+    border: 1px solid rgb(120 160 255 / 0.1);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.03);
+  }
+  .admin-input {
+    height: 2.25rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgb(255 255 255 / 0.1);
+    background: rgb(255 255 255 / 0.03);
+    padding: 0.5rem 0.75rem;
+    font-size: 13px;
+    color: var(--color-ink);
+    color-scheme: dark;
+  }
+  .admin-input:focus {
+    outline: none;
+    border-color: rgb(54 217 255 / 0.5);
+  }
+  .admin-input option {
+    background: #0b1222;
+  }
+}

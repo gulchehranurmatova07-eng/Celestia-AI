@@ -54,7 +54,7 @@ export function Landing({
   t: Dictionary;
   lang: LangCode;
   onLangChange: (lang: LangCode) => void;
-  onStart: () => void;
+  onStart: (source?: "hero" | "nav" | "contact") => void;
   onAsk: (question: string) => void;
   chatOpen: boolean;
 }) {
@@ -78,7 +78,7 @@ export function Landing({
             {t.navContact}
           </a>
         </nav>
-        <button type="button" onClick={onStart} className="btn-primary hidden rounded-full px-4 py-2 text-sm font-medium text-white sm:block">
+        <button type="button" onClick={() => onStart("nav")} className="btn-primary hidden rounded-full px-4 py-2 text-sm font-medium text-white sm:block">
           {t.startConversation}
         </button>
       </header>
@@ -101,7 +101,7 @@ export function Landing({
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <button
                 type="button"
-                onClick={onStart}
+                onClick={() => onStart("hero")}
                 className="btn-primary inline-flex items-center gap-2 rounded-full px-6 py-3.5 font-medium text-white"
               >
                 {t.startConversation}
@@ -138,7 +138,7 @@ export function Landing({
               <div className="absolute h-[250px] w-[250px] rounded-full border border-cyan/10 sm:h-[290px] sm:w-[290px]" />
               <button
                 type="button"
-                onClick={onStart}
+                onClick={() => onStart("hero")}
                 aria-label={t.openChat}
                 aria-expanded={chatOpen}
                 className="orb-interactive group relative rounded-full focus-visible:outline-offset-[18px]"
@@ -245,7 +245,7 @@ export function Landing({
             <h2 className="relative font-display text-3xl font-bold tracking-tight sm:text-4xl">{t.contactTitle}</h2>
             <p className="relative mx-auto mt-3 max-w-xl text-mist">{t.contactText}</p>
             <div className="relative mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-              <a href={`mailto:${CONTACT.email}`} className="chip inline-flex items-center justify-center gap-3 rounded-2xl px-5 py-3.5">
+              <a href={`mailto:${CONTACT.email}`} data-track-contact="email" data-track-place="landing" className="chip inline-flex items-center justify-center gap-3 rounded-2xl px-5 py-3.5">
                 <MailIcon className="text-cyan" />
                 <span className="text-left">
                   <span className="block text-[11px] text-mist">{t.emailUs}</span>
@@ -254,6 +254,8 @@ export function Landing({
               </a>
               <a
                 href={CONTACT.telegramUrl}
+                data-track-contact="telegram"
+                data-track-place="landing"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="chip inline-flex items-center justify-center gap-3 rounded-2xl px-5 py-3.5"
@@ -264,7 +266,7 @@ export function Landing({
                   <span className="block text-sm">@{CONTACT.telegramHandle}</span>
                 </span>
               </a>
-              <button type="button" onClick={onStart} className="btn-primary inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-4 font-medium text-white">
+              <button type="button" onClick={() => onStart("contact")} className="btn-primary inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-4 font-medium text-white">
                 {t.startConversation}
                 <ArrowRightIcon size={18} />
               </button>

@@ -1,8 +1,14 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { randomUUID } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { SYSTEM_PROMPT, languageHint } from "@/lib/knowledge";
 import { DEFAULT_LANG, isLang, type LangCode } from "@/lib/i18n";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { classifyError, type Classified } from "@/lib/server/aiErrors";
+import { recordError } from "@/lib/server/errors";
+import { clientIp } from "@/lib/server/security";
+import { getSettings } from "@/lib/server/settings";
+import { recordAiRequest, sessionIdFrom, type AiRequestRecord } from "@/lib/server/telemetry";
 import {
   MAX_HISTORY_MESSAGES,
   MAX_MESSAGE_CHARS,
@@ -15,22 +21,14 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const MODEL = process.env.CELESTIA_MODEL?.trim() || "claude-opus-5-5";
-const RATE_LIMIT = Number(process.env.CELESTIA_RATE_LIMIT_PER_MINUTE) || 12;
-
 let client: Anthropic | null = null;
 function getClient(): Anthropic {
   client ??= new Anthropic({ maxRetries: 2, timeout: 60_000 });
   return client;
 }
 
-function errorResponse(code: ErrorCode, status: number, headers?: HeadersInit) {
-  return NextResponse.json({ error: code }, { status, headers });
-}
-
-function clientIp(req: NextRequest): string {
-  const forwarded = req.headers.get("x-forwarded-for");
-  return forwarded?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "unknown";
+function errorResponse(code: ErrorCode, status: number, requestId: string, headers?: HeadersInit) {
+  return NextResponse.json({ error: code, requestId }, { status, headers: { "X-Request-Id": requestId, ...headers } });
 }
 
 function parseBody(body: unknown): { ok: true; value: { messages: ChatTurn[]; lang: LangCode } } | { ok: false; code: ErrorCode } {
@@ -59,77 +57,170 @@ function parseBody(body: unknown): { ok: true; value: { messages: ChatTurn[]; la
   return { ok: true, value: { messages: turns, lang: isLang(lang) ? lang : DEFAULT_LANG } };
 }
 
-export async function POST(req: NextRequest) {
-  if (!process.env.ANTHROPIC_API_KEY?.trim()) return errorResponse("not_configured", 503);
+function emptyRecord(id: string, sessionId: string | null, model: string): AiRequestRecord {
+  return {
+    id,
+    sessionId,
+    lang: null,
+    model,
+    servedModel: null,
+    status: "error",
+    errorCategory: null,
+    httpStatus: null,
+    latencyMs: 0,
+    ttftMs: null,
+    inputTokens: null,
+    outputTokens: null,
+    cacheReadTokens: null,
+    cacheWriteTokens: null,
+    fallback: false,
+    turnCount: 0,
+  };
+}
 
-  const limit = checkRateLimit(clientIp(req), RATE_LIMIT);
-  if (!limit.ok) return errorResponse("rate_limited", 429, { "Retry-After": String(limit.retryAfterSec) });
+export async function POST(req: NextRequest) {
+  const requestId = randomUUID();
+  const started = Date.now();
+  const sessionId = sessionIdFrom(req.headers.get("x-celestia-session"));
+
+  const settings = await getSettings();
+  const rejected = (category: string) =>
+    recordAiRequest({
+      ...emptyRecord(requestId, sessionId, settings["ai.model"]),
+      errorCategory: category,
+      latencyMs: Date.now() - started,
+    });
+
+  if (!process.env.ANTHROPIC_API_KEY?.trim()) {
+    await rejected("not_configured");
+    await recordError({
+      source: "config",
+      category: "missing_api_key",
+      severity: "high",
+      title: "ANTHROPIC_API_KEY is not set",
+      message: "Chat request rejected: ANTHROPIC_API_KEY is not configured on the server",
+      requestId,
+      path: "/api/chat",
+    });
+    return errorResponse("not_configured", 503, requestId);
+  }
+
+  if (!settings["chat.enabled"]) return errorResponse("maintenance", 503, requestId);
+
+  const limit = checkRateLimit(clientIp(req.headers), settings["chat.rateLimitPerMinute"]);
+  if (!limit.ok) {
+    await rejected("rate_limited");
+    return errorResponse("rate_limited", 429, requestId, { "Retry-After": String(limit.retryAfterSec) });
+  }
 
   const contentLength = Number(req.headers.get("content-length") ?? 0);
-  if (contentLength > 200_000) return errorResponse("too_long", 413);
+  if (contentLength > 200_000) return errorResponse("too_long", 413, requestId);
 
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return errorResponse("invalid_request", 400);
+    return errorResponse("invalid_request", 400, requestId);
   }
   const parsed = parseBody(body);
-  if (!parsed.ok) return errorResponse(parsed.code, parsed.code === "too_long" ? 413 : 400);
+  if (!parsed.ok) return errorResponse(parsed.code, parsed.code === "too_long" ? 413 : 400, requestId);
   const { messages, lang } = parsed.value;
+  const model = settings["ai.model"];
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
-      const send = (event: StreamEvent) => controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
+      const send = (event: StreamEvent) => {
+        try {
+          controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
+        } catch {
+          // Stream already closed by the client.
+        }
+      };
 
-      const upstream = getClient().beta.messages.stream(
-        {
-          model: MODEL,
-          max_tokens: 4096,
-          output_config: { effort: "low" },
-          betas: ["server-side-fallback-2026-07-01"],
-          fallbacks: "default",
-          system: [
-            { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
-            { type: "text", text: languageHint(lang) },
-          ],
-          messages,
-        },
-        { signal: req.signal },
-      );
+      const record: AiRequestRecord = {
+        ...emptyRecord(requestId, sessionId, model),
+        lang,
+        turnCount: Math.ceil(messages.length / 2),
+      };
+      let failure: { classified: Classified; message: string } | null = null;
 
       try {
+        const upstream = getClient().beta.messages.stream(
+          {
+            model,
+            max_tokens: settings["ai.maxTokens"],
+            output_config: { effort: settings["ai.effort"] },
+            betas: ["server-side-fallback-2026-07-01"],
+            fallbacks: "default",
+            system: [
+              { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
+              { type: "text", text: languageHint(lang) },
+            ],
+            messages,
+          },
+          { signal: req.signal },
+        );
+
         let sent = false;
         for await (const event of upstream) {
           if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+            if (!sent) record.ttftMs = Date.now() - started;
             sent = true;
             send({ type: "delta", text: event.delta.text });
           }
         }
         const final = await upstream.finalMessage();
+        record.servedModel = final.model;
+        record.inputTokens = final.usage.input_tokens;
+        record.outputTokens = final.usage.output_tokens;
+        record.cacheReadTokens = final.usage.cache_read_input_tokens ?? 0;
+        record.cacheWriteTokens = final.usage.cache_creation_input_tokens ?? 0;
+        record.fallback = (final.usage.iterations ?? []).some((it) => it.type === "fallback_message");
+
         if (final.stop_reason === "refusal") {
-          send({ type: "error", code: "refused" });
+          record.status = "refused";
+          record.errorCategory = "refusal";
+          send({ type: "error", code: "refused", requestId });
         } else if (!sent) {
-          send({ type: "error", code: "upstream" });
+          record.errorCategory = "empty_response";
+          failure = {
+            classified: { code: "upstream", category: "empty_response", severity: "medium", httpStatus: 200 },
+            message: `Model returned no text (stop_reason: ${final.stop_reason})`,
+          };
+          send({ type: "error", code: "upstream", requestId });
         } else {
+          record.status = "success";
           send({ type: "done" });
         }
       } catch (err) {
-        if (!req.signal.aborted) {
-          let code: ErrorCode = "server";
-          if (err instanceof Anthropic.RateLimitError) code = "rate_limited";
-          else if (err instanceof Anthropic.AuthenticationError || err instanceof Anthropic.PermissionDeniedError) {
-            code = "not_configured";
-          } else if (err instanceof Anthropic.APIError) code = "upstream";
-          console.error("[celestia-ai] chat request failed:", err instanceof Error ? err.message : err);
-          try {
-            send({ type: "error", code });
-          } catch {
-            // Stream already closed by the client.
-          }
+        if (req.signal.aborted) {
+          record.status = "aborted";
+          record.errorCategory = "client_aborted";
+        } else {
+          const classified = classifyError(err);
+          record.errorCategory = classified.category;
+          record.httpStatus = classified.httpStatus;
+          failure = { classified, message: err instanceof Error ? err.message : String(err) };
+          console.error(`[celestia-ai] chat request ${requestId} failed (${classified.category}):`, failure.message);
+          send({ type: "error", code: classified.code, requestId });
         }
       } finally {
+        record.latencyMs = Date.now() - started;
+        // Write diagnostics before closing so serverless runtimes don't freeze mid-write.
+        await recordAiRequest(record);
+        if (failure) {
+          await recordError({
+            source: "ai",
+            category: failure.classified.category,
+            severity: failure.classified.severity,
+            title: `AI generation failed: ${failure.classified.category}`,
+            message: failure.message,
+            detail: { model, httpStatus: failure.classified.httpStatus, latencyMs: record.latencyMs },
+            requestId,
+            path: "/api/chat",
+          });
+        }
         try {
           controller.close();
         } catch {
@@ -144,6 +235,7 @@ export async function POST(req: NextRequest) {
       "Content-Type": "application/x-ndjson; charset=utf-8",
       "Cache-Control": "no-store",
       "X-Accel-Buffering": "no",
+      "X-Request-Id": requestId,
     },
   });
 }

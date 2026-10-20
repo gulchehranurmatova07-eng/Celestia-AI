@@ -3,6 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DEFAULT_LANG, DICTIONARIES, LANG_META, detectLanguage, isLang, type LangCode } from "@/lib/i18n";
+import { installTelemetry, setTelemetryLang, track, trackPageView } from "@/lib/telemetry";
 import { useChat } from "@/lib/useChat";
 import { ChatPanel, type ChatPanelHandle } from "./ChatPanel";
 import { Landing } from "./Landing";
@@ -14,11 +15,17 @@ const LANG_KEY = "celestia-lang";
 export function CelestiaApp() {
   const [lang, setLangState] = useState<LangCode>(DEFAULT_LANG);
   const [open, setOpen] = useState(false);
+  const openRef = useRef(false);
   const panelRef = useRef<ChatPanelHandle>(null);
   const launcherRef = useRef<HTMLButtonElement>(null);
   const chat = useChat(lang);
   const reduceMotion = useReducedMotion();
   const t = DICTIONARIES[lang];
+
+  useEffect(() => {
+    installTelemetry();
+    trackPageView();
+  }, []);
 
   // Restore the language chosen earlier in this browser session.
   useEffect(() => {
@@ -32,10 +39,12 @@ export function CelestiaApp() {
 
   useEffect(() => {
     document.documentElement.lang = LANG_META[lang].htmlLang;
+    setTelemetryLang(lang);
   }, [lang]);
 
-  const setLang = useCallback((next: LangCode) => {
+  const setLang = useCallback((next: LangCode, via: "manual" | "auto" = "manual") => {
     setLangState(next);
+    track("language_changed", { to: next, via });
     try {
       sessionStorage.setItem(LANG_KEY, next);
     } catch {
@@ -46,30 +55,41 @@ export function CelestiaApp() {
   const send = useCallback(
     (text: string) => {
       // Follow the visitor's language on their first message when it is clear.
+      let effective = lang;
       if (!chat.messages.some((m) => m.role === "user")) {
         const detected = detectLanguage(text);
-        if (detected && detected !== lang) setLang(detected);
+        if (detected && detected !== lang) {
+          setLang(detected, "auto");
+          effective = detected; // state updates after this tick; send the detected language now
+        }
       }
-      chat.send(text);
+      chat.send(text, effective);
     },
     [chat, lang, setLang],
   );
 
-  const openChat = useCallback(() => {
+  const openChat = useCallback((source: "hero" | "launcher" | "nav" | "question" | "contact" = "hero") => {
+    if (!openRef.current) track("chat_opened", { source });
+    openRef.current = true;
     setOpen(true);
     setTimeout(() => panelRef.current?.focusInput(), reduceMotion ? 0 : 320);
   }, [reduceMotion]);
 
   const ask = useCallback(
     (question: string) => {
-      openChat();
-      if (!chat.pending) send(question);
+      openChat("question");
+      if (!chat.pending) {
+        track("message_sent", { source: "suggestion" });
+        send(question);
+      }
     },
     [openChat, send, chat.pending],
   );
 
   const minimize = useCallback(() => {
+    openRef.current = false;
     setOpen(false);
+    track("chat_minimized");
     setTimeout(() => launcherRef.current?.focus(), 50);
   }, []);
 
@@ -94,7 +114,7 @@ export function CelestiaApp() {
             <button
               ref={launcherRef}
               type="button"
-              onClick={openChat}
+              onClick={() => openChat("launcher")}
               aria-label={t.openChat}
               className="orb-interactive group relative block rounded-full"
             >

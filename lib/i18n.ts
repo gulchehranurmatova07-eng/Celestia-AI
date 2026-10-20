@@ -83,6 +83,8 @@ export type Dictionary = {
   errRateLimit: string;
   errTooLong: string;
   errRefused: string;
+  errMaintenance: string;
+  errReference: string;
   errNotConfiguredTitle: string;
   errNotConfiguredText: string;
   retry: string;
@@ -185,11 +187,13 @@ const en: Dictionary = {
   errRateLimit: "You’re sending messages a bit fast. Please wait a moment and try again.",
   errTooLong: "That message is too long. Please keep it under 2,000 characters.",
   errRefused: "I can’t help with that request, but I’m happy to answer questions about websites and WEB-CREATORS.",
+  errMaintenance: "The chat is under maintenance right now. Please reach the team directly via Gmail or Telegram.",
+  errReference: "Reference",
   errNotConfiguredTitle: "AI is not connected yet",
   errNotConfiguredText:
     "The site owner needs to add an ANTHROPIC_API_KEY on the server before Celestia AI can answer. Meanwhile, you can reach the team directly:",
   retry: "Retry",
-  disclaimer: "Celestia AI can make mistakes. Prices are indicative — the team confirms final quotes. Chats are not saved.",
+  disclaimer: "Celestia AI can make mistakes. Prices are indicative — the team confirms final quotes. Chat content isn’t saved; anonymous usage stats help us improve.",
   openChat: "Open Celestia AI chat",
 };
 
@@ -288,11 +292,13 @@ const ru: Dictionary = {
   errRateLimit: "Вы отправляете сообщения слишком быстро. Подождите немного и попробуйте снова.",
   errTooLong: "Сообщение слишком длинное. Пожалуйста, не более 2000 символов.",
   errRefused: "С этим запросом я помочь не могу, но с радостью отвечу на вопросы о сайтах и WEB-CREATORS.",
+  errMaintenance: "Чат сейчас на техническом обслуживании. Свяжитесь с командой напрямую через Gmail или Telegram.",
+  errReference: "Номер обращения",
   errNotConfiguredTitle: "ИИ ещё не подключён",
   errNotConfiguredText:
     "Владельцу сайта нужно добавить ANTHROPIC_API_KEY на сервере, чтобы Celestia AI могла отвечать. А пока можно связаться с командой напрямую:",
   retry: "Повторить",
-  disclaimer: "Celestia AI может ошибаться. Цены ориентировочные — окончательную стоимость подтверждает команда. Чаты не сохраняются.",
+  disclaimer: "Celestia AI может ошибаться. Цены ориентировочные — окончательную стоимость подтверждает команда. Текст чатов не сохраняется; анонимная статистика помогает нам улучшаться.",
   openChat: "Открыть чат Celestia AI",
 };
 
@@ -386,10 +392,12 @@ const zh: Dictionary = {
   errRateLimit: "您发送消息有点快，请稍等片刻再试。",
   errTooLong: "消息太长了，请控制在 2000 个字符以内。",
   errRefused: "这个请求我无法提供帮助，但很乐意回答关于网站和 WEB-CREATORS 的问题。",
+  errMaintenance: "聊天功能正在维护中。请通过 Gmail 或 Telegram 直接联系团队。",
+  errReference: "参考编号",
   errNotConfiguredTitle: "AI 尚未连接",
   errNotConfiguredText: "网站所有者需要在服务器上配置 ANTHROPIC_API_KEY，Celestia AI 才能回答。在此期间，您可以直接联系团队：",
   retry: "重试",
-  disclaimer: "Celestia AI 可能会出错。价格仅供参考，最终报价由团队确认。聊天记录不会被保存。",
+  disclaimer: "Celestia AI 可能会出错。价格仅供参考，最终报价由团队确认。聊天内容不会被保存；匿名使用统计帮助我们改进。",
   openChat: "打开 Celestia AI 聊天",
 };
 
@@ -488,11 +496,13 @@ const uz: Dictionary = {
   errRateLimit: "Xabarlarni biroz tez yuboryapsiz. Bir oz kutib, qayta urinib ko‘ring.",
   errTooLong: "Xabar juda uzun. Iltimos, 2000 belgidan oshirmang.",
   errRefused: "Bu so‘rovda yordam bera olmayman, lekin veb-saytlar va WEB-CREATORS haqidagi savollarga mamnuniyat bilan javob beraman.",
+  errMaintenance: "Chat hozir texnik xizmat ko‘rsatilmoqda. Iltimos, jamoa bilan Gmail yoki Telegram orqali bog‘laning.",
+  errReference: "Murojaat raqami",
   errNotConfiguredTitle: "AI hali ulanmagan",
   errNotConfiguredText:
     "Celestia AI javob berishi uchun sayt egasi serverga ANTHROPIC_API_KEY qo‘shishi kerak. Hozircha jamoa bilan to‘g‘ridan-to‘g‘ri bog‘lanishingiz mumkin:",
   retry: "Qayta urinish",
-  disclaimer: "Celestia AI xato qilishi mumkin. Narxlar taxminiy — yakuniy narxni jamoa tasdiqlaydi. Suhbatlar saqlanmaydi.",
+  disclaimer: "Celestia AI xato qilishi mumkin. Narxlar taxminiy — yakuniy narxni jamoa tasdiqlaydi. Suhbat matni saqlanmaydi; anonim statistika xizmatni yaxshilashga yordam beradi.",
   openChat: "Celestia AI chatini ochish",
 };
 
@@ -591,11 +601,13 @@ const tr: Dictionary = {
   errRateLimit: "Mesajları biraz hızlı gönderiyorsunuz. Lütfen biraz bekleyip tekrar deneyin.",
   errTooLong: "Mesaj çok uzun. Lütfen 2.000 karakteri geçmeyin.",
   errRefused: "Bu istekte yardımcı olamıyorum, ancak web siteleri ve WEB-CREATORS hakkındaki sorularınızı memnuniyetle yanıtlarım.",
+  errMaintenance: "Sohbet şu anda bakımda. Lütfen ekibe doğrudan Gmail veya Telegram üzerinden ulaşın.",
+  errReference: "Referans",
   errNotConfiguredTitle: "Yapay zekâ henüz bağlı değil",
   errNotConfiguredText:
     "Celestia AI’ın yanıt verebilmesi için site sahibinin sunucuya ANTHROPIC_API_KEY eklemesi gerekiyor. Bu arada ekiple doğrudan iletişime geçebilirsiniz:",
   retry: "Tekrar dene",
-  disclaimer: "Celestia AI hata yapabilir. Fiyatlar yaklaşıktır — nihai teklifi ekip onaylar. Sohbetler kaydedilmez.",
+  disclaimer: "Celestia AI hata yapabilir. Fiyatlar yaklaşıktır — nihai teklifi ekip onaylar. Sohbet içeriği kaydedilmez; anonim kullanım istatistikleri gelişmemize yardımcı olur.",
   openChat: "Celestia AI sohbetini aç",
 };
 
