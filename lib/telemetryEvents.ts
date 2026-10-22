@@ -8,7 +8,7 @@ export const TELEMETRY_EVENTS = {
   language_changed: { to: ["en", "ru", "zh", "uz", "tr"], via: ["manual", "auto"] },
   cta_shown: {},
   cta_clicked: { cta: ["discuss", "explore", "estimate", "portfolio", "another"] },
-  contact_clicked: { channel: ["email", "telegram"], place: ["chat", "landing", "setup"] },
+  contact_clicked: { channel: ["email", "telegram", "phone", "instagram"], place: ["chat", "landing", "setup"] },
   chat_cleared: {},
   answer_copied: {},
 } as const satisfies Record<string, Record<string, readonly string[]>>;

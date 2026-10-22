@@ -15,6 +15,8 @@ import {
   MinusIcon,
   RetryIcon,
   SendIcon,
+  CallIcon,
+  InstagramIcon,
   TelegramIcon,
   TrashIcon,
 } from "./Icons";
@@ -501,6 +503,20 @@ function ContactLinks({ t, mailto, className = "" }: { t: Dictionary; mailto: st
           <span>
             <span className="block text-[11px] text-mist">{t.telegramUs}</span>
             <span className="block">@{CONTACT.telegramHandle}</span>
+          </span>
+        </a>
+        <a href={CONTACT.phoneHref} data-track-contact="phone" data-track-place="chat" className="chip flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm">
+          <CallIcon size={18} className="text-cyan" />
+          <span>
+            <span className="block text-[11px] text-mist">{t.callUs}</span>
+            <span className="block">{CONTACT.phone}</span>
+          </span>
+        </a>
+        <a href={CONTACT.instagramUrl} data-track-contact="instagram" data-track-place="chat" target="_blank" rel="noopener noreferrer" className="chip flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm">
+          <InstagramIcon size={18} className="text-cyan" />
+          <span>
+            <span className="block text-[11px] text-mist">{t.instagramUs}</span>
+            <span className="block">@{CONTACT.instagramHandle}</span>
           </span>
         </a>
       </div>

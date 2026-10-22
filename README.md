@@ -10,7 +10,11 @@ Celestia AI is the official multilingual virtual assistant of **WEB-CREATORS**. 
 - **Real AI answers.** Replies stream live from Claude through a secure server-side endpoint (`/api/chat`). The API key never reaches the browser.
 - **Five languages.** English, Русский, 中文, O‘zbek and Türkçe. The whole interface is translated, and Celestia replies in the language the visitor writes in. The first message auto-detects the language, and the visitor can switch at any time from the header or the landing page. The choice is kept for the browser session.
 - **Signature orb.** A floating glossy sphere with a rotating orbital ring, particles and a breathing glow. It has distinct idle, hover, thinking and "answer arrived" states and respects `prefers-reduced-motion`.
-- **Verified knowledge base.** Company facts, services, pricing rules ($400 is an indicative average, never a fixed quote) and the official contact channels live in `lib/knowledge.ts` and `lib/config.ts`. The system prompt tells the model never to invent testimonials, projects, discounts, addresses or contact details, and to resist prompt injection.
+- **Verified knowledge base.** It mirrors the main website (www.webcreatorsuz.com) and lives in `lib/knowledge.ts` and `lib/config.ts`:
+  - plans and USD price ranges per business type (from $200), add-ons, the free concept, the 5-step process, FAQ and the portfolio
+  - official contacts: Telegram, phone, Instagram and Gmail
+
+  The system prompt tells the model never to invent prices, testimonials, projects, discounts, addresses or contact details, and to resist prompt injection. When prices change on the main website, update `lib/knowledge.ts` and the pricing card in `lib/i18n.ts` too.
 - **Lead flow without pressure.** After a couple of answers, or when the visitor asks about price, a call-to-action appears with these options:
   - Discuss My Project (Gmail / Telegram)
   - Explore Services
@@ -61,7 +65,7 @@ npm start
 | `CRON_SECRET` | No | Enables the daily scheduled health check, alert evaluation and data retention (`vercel.json`). |
 | `CELESTIA_MODEL` | No | Default Claude model ID (`claude-opus-5-5`). Admins can override it in Settings. |
 | `CELESTIA_RATE_LIMIT_PER_MINUTE` | No | Default chat requests per visitor IP per minute (`12`). Admins can override it in Settings. |
-| `NEXT_PUBLIC_PORTFOLIO_URL` | No | Link for the **View Portfolio** button. Until it is set, the button shows a "coming soon" note. |
+| `NEXT_PUBLIC_PORTFOLIO_URL` | No | Link for the **View Portfolio** button. Defaults to the projects section of www.webcreatorsuz.com. |
 
 Without `ANTHROPIC_API_KEY`, the site still works and the chat shows a clear "AI is not connected yet" notice with the official contact links. It never fakes answers.
 
@@ -143,7 +147,7 @@ The integration tests cover:
 | What | Where |
 |---|---|
 | Company facts, services, pricing rules, assistant personality | `lib/knowledge.ts` |
-| Contact email / Telegram, brand name, portfolio link | `lib/config.ts` |
+| Contacts (email, Telegram, phone, Instagram, main website), brand name, portfolio link | `lib/config.ts` |
 | All interface text in the 5 languages | `lib/i18n.ts` |
 | Colors, glass surfaces, orb animation | `app/globals.css` |
 | Showcase images | `public/brand/` |

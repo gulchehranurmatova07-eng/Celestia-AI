@@ -48,6 +48,8 @@ export type Dictionary = {
   contactText: string;
   emailUs: string;
   telegramUs: string;
+  callUs: string;
+  instagramUs: string;
   founded: string;
   rights: string;
   // Chat
@@ -129,9 +131,9 @@ const en: Dictionary = {
     { title: "Digital Business Solutions", text: "Restaurant, hotel and booking experiences, custom features." },
   ],
   pricingTitle: "Transparent starting point",
-  pricingText: "The average website project at WEB-CREATORS costs around",
+  pricingText: "Websites at WEB-CREATORS start from",
   pricingNote:
-    "An indicative average, not a fixed quote. The final price depends on your goals, pages and features. Hosting, domains and third-party services are confirmed separately by the team.",
+    "Restaurants $200–800, barbershops $200–500, hotels $400–800, online stores $800–1,000, clothing stores from $750. Domain + hosting $50–100 per year. You see a free concept before paying anything.",
   askPrice: "Ask about my project",
   showcaseTitle: "Celestia AI in the spotlight",
   showcaseText: "A glimpse of the assistant behind WEB-CREATORS.",
@@ -144,6 +146,8 @@ const en: Dictionary = {
   contactText: "Let’s discuss your project with WEB-CREATORS.",
   emailUs: "Write on Gmail",
   telegramUs: "Message on Telegram",
+  callUs: "Call us",
+  instagramUs: "Instagram",
   founded: "WEB-CREATORS was founded in 2026 by JackDaniel & DonAsadMoriarty.",
   rights: "All rights reserved.",
   assistantSubtitle: "WEB-CREATORS Assistant",
@@ -234,9 +238,9 @@ const ru: Dictionary = {
     { title: "Цифровые решения для бизнеса", text: "Сайты ресторанов и отелей, бронирование, индивидуальные функции." },
   ],
   pricingTitle: "Понятная отправная точка",
-  pricingText: "Средняя стоимость сайта в WEB-CREATORS — около",
+  pricingText: "Сайты в WEB-CREATORS — от",
   pricingNote:
-    "Это ориентировочная средняя цена, а не фиксированное предложение. Итоговая стоимость зависит от целей, количества страниц и функций. Хостинг, домен и сторонние сервисы команда подтверждает отдельно.",
+    "Рестораны $200–800, барбершопы $200–500, отели $400–800, интернет-магазины $800–1 000, магазины одежды — от $750. Домен + хостинг $50–100 в год. Бесплатный концепт сайта — ещё до оплаты.",
   askPrice: "Спросить о моём проекте",
   showcaseTitle: "Celestia AI в центре внимания",
   showcaseText: "Знакомьтесь с ассистентом WEB-CREATORS.",
@@ -249,6 +253,8 @@ const ru: Dictionary = {
   contactText: "Давайте обсудим ваш проект с WEB-CREATORS.",
   emailUs: "Написать в Gmail",
   telegramUs: "Написать в Telegram",
+  callUs: "Позвонить",
+  instagramUs: "Instagram",
   founded: "WEB-CREATORS основана в 2026 году — JackDaniel и DonAsadMoriarty.",
   rights: "Все права защищены.",
   assistantSubtitle: "Ассистент WEB-CREATORS",
@@ -335,8 +341,9 @@ const zh: Dictionary = {
     { title: "数字商业方案", text: "餐厅与酒店网站、预订体验及定制功能。" },
   ],
   pricingTitle: "清晰的起点",
-  pricingText: "WEB-CREATORS 网站项目的平均价格约为",
-  pricingNote: "这是参考平均价，并非固定报价。最终价格取决于您的目标、页面数量和功能。主机、域名及第三方服务费用需由团队另行确认。",
+  pricingText: "WEB-CREATORS 网站起价",
+  pricingNote:
+    "餐厅 $200–800，理发店 $200–500，酒店 $400–800，网上商店 $800–1,000，服装店 $750 起。域名 + 主机每年 $50–100。付款前即可免费看到网站概念设计。",
   askPrice: "咨询我的项目",
   showcaseTitle: "聚焦 Celestia AI",
   showcaseText: "一睹 WEB-CREATORS 背后的智能助手。",
@@ -349,6 +356,8 @@ const zh: Dictionary = {
   contactText: "和 WEB-CREATORS 聊聊您的项目吧。",
   emailUs: "通过 Gmail 联系",
   telegramUs: "通过 Telegram 联系",
+  callUs: "致电我们",
+  instagramUs: "Instagram",
   founded: "WEB-CREATORS 由 JackDaniel 与 DonAsadMoriarty 于 2026 年创立。",
   rights: "保留所有权利。",
   assistantSubtitle: "WEB-CREATORS 助手",
@@ -438,9 +447,9 @@ const uz: Dictionary = {
     { title: "Raqamli biznes yechimlari", text: "Restoran va mehmonxona saytlari, bron qilish, maxsus funksiyalar." },
   ],
   pricingTitle: "Aniq boshlanish nuqtasi",
-  pricingText: "WEB-CREATORS’da veb-sayt loyihasining o‘rtacha narxi taxminan",
+  pricingText: "WEB-CREATORS’da veb-sayt narxlari quyidagidan boshlanadi:",
   pricingNote:
-    "Bu taxminiy o‘rtacha narx, qat’iy taklif emas. Yakuniy narx maqsadlaringiz, sahifalar soni va funksiyalarga bog‘liq. Xosting, domen va uchinchi tomon xizmatlarini jamoa alohida tasdiqlaydi.",
+    "Restoranlar $200–800, barbershoplar $200–500, mehmonxonalar $400–800, onlayn do‘konlar $800–1 000, kiyim do‘konlari $750 dan. Domen + xosting yiliga $50–100. To‘lovdan oldin bepul konsepsiyani ko‘rasiz.",
   askPrice: "Loyiham haqida so‘rash",
   showcaseTitle: "Diqqat markazida — Celestia AI",
   showcaseText: "WEB-CREATORS yordamchisi bilan tanishing.",
@@ -453,6 +462,8 @@ const uz: Dictionary = {
   contactText: "Loyihangizni WEB-CREATORS bilan muhokama qilaylik.",
   emailUs: "Gmail orqali yozish",
   telegramUs: "Telegram orqali yozish",
+  callUs: "Qo‘ng‘iroq qilish",
+  instagramUs: "Instagram",
   founded: "WEB-CREATORS 2026-yilda JackDaniel va DonAsadMoriarty tomonidan asos solingan.",
   rights: "Barcha huquqlar himoyalangan.",
   assistantSubtitle: "WEB-CREATORS yordamchisi",
@@ -543,9 +554,9 @@ const tr: Dictionary = {
     { title: "Dijital İş Çözümleri", text: "Restoran ve otel siteleri, rezervasyon deneyimleri, özel özellikler." },
   ],
   pricingTitle: "Şeffaf bir başlangıç noktası",
-  pricingText: "WEB-CREATORS’ta ortalama bir web sitesi projesinin maliyeti yaklaşık",
+  pricingText: "WEB-CREATORS’ta web siteleri şu fiyattan başlar:",
   pricingNote:
-    "Bu, sabit bir teklif değil, yaklaşık bir ortalamadır. Nihai fiyat hedeflerinize, sayfa sayısına ve özelliklere bağlıdır. Barındırma, alan adı ve üçüncü taraf hizmetler ekip tarafından ayrıca teyit edilir.",
+    "Restoranlar $200–800, berberler $200–500, oteller $400–800, online mağazalar $800–1.000, giyim mağazaları $750’den başlayan fiyatlarla. Alan adı + barındırma yılda $50–100. Ödeme yapmadan önce ücretsiz konsepti görürsünüz.",
   askPrice: "Projemi sor",
   showcaseTitle: "Spot ışığında: Celestia AI",
   showcaseText: "WEB-CREATORS’ın arkasındaki asistana bir bakış.",
@@ -558,6 +569,8 @@ const tr: Dictionary = {
   contactText: "Projenizi WEB-CREATORS ile konuşalım.",
   emailUs: "Gmail ile yazın",
   telegramUs: "Telegram’dan yazın",
+  callUs: "Bizi arayın",
+  instagramUs: "Instagram",
   founded: "WEB-CREATORS, 2026 yılında JackDaniel ve DonAsadMoriarty tarafından kuruldu.",
   rights: "Tüm hakları saklıdır.",
   assistantSubtitle: "WEB-CREATORS Asistanı",

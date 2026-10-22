@@ -17,6 +17,8 @@ import {
   SmileIcon,
   SparkleIcon,
   StarIcon,
+  CallIcon,
+  InstagramIcon,
   TelegramIcon,
   WrenchIcon,
 } from "./Icons";
@@ -198,7 +200,7 @@ export function Landing({
               <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-electric/30 blur-3xl" />
               <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-cyan">{t.pricingTitle}</p>
               <p className="mt-3 text-sm text-mist">{t.pricingText}</p>
-              <p className="mt-1 font-display text-5xl font-bold text-white">$400</p>
+              <p className="mt-1 font-display text-5xl font-bold text-white">$200</p>
               <p className="mt-3 text-xs leading-relaxed text-mist">{t.pricingNote}</p>
               <button type="button" onClick={() => onAsk(t.estimateMessage)} className="btn-primary mt-4 rounded-full px-4 py-2 text-sm font-medium text-white">
                 {t.askPrice}
@@ -244,7 +246,7 @@ export function Landing({
             <div className="pointer-events-none absolute left-1/2 top-0 h-48 w-[70%] -translate-x-1/2 rounded-full bg-electric/25 blur-3xl" />
             <h2 className="relative font-display text-3xl font-bold tracking-tight sm:text-4xl">{t.contactTitle}</h2>
             <p className="relative mx-auto mt-3 max-w-xl text-mist">{t.contactText}</p>
-            <div className="relative mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+            <div className="relative mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <a href={`mailto:${CONTACT.email}`} data-track-contact="email" data-track-place="landing" className="chip inline-flex items-center justify-center gap-3 rounded-2xl px-5 py-3.5">
                 <MailIcon className="text-cyan" />
                 <span className="text-left">
@@ -264,6 +266,27 @@ export function Landing({
                 <span className="text-left">
                   <span className="block text-[11px] text-mist">{t.telegramUs}</span>
                   <span className="block text-sm">@{CONTACT.telegramHandle}</span>
+                </span>
+              </a>
+              <a href={CONTACT.phoneHref} data-track-contact="phone" data-track-place="landing" className="chip inline-flex items-center justify-center gap-3 rounded-2xl px-5 py-3.5">
+                <CallIcon className="text-cyan" />
+                <span className="text-left">
+                  <span className="block text-[11px] text-mist">{t.callUs}</span>
+                  <span className="block text-sm">{CONTACT.phone}</span>
+                </span>
+              </a>
+              <a
+                href={CONTACT.instagramUrl}
+                data-track-contact="instagram"
+                data-track-place="landing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="chip inline-flex items-center justify-center gap-3 rounded-2xl px-5 py-3.5"
+              >
+                <InstagramIcon className="text-cyan" />
+                <span className="text-left">
+                  <span className="block text-[11px] text-mist">{t.instagramUs}</span>
+                  <span className="block text-sm">@{CONTACT.instagramHandle}</span>
                 </span>
               </a>
               <button type="button" onClick={() => onStart("contact")} className="btn-primary inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-4 font-medium text-white">

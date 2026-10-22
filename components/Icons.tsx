@@ -91,6 +91,18 @@ export const TelegramIcon = (p: IconProps) => (
     <path d="M21 4 2.8 11.1c-.8.3-.8 1.4 0 1.7l4.6 1.6 1.8 5.4c.2.7 1.1.9 1.6.4l2.6-2.5 4.6 3.4c.6.4 1.4.1 1.6-.6L22.3 5.3c.2-.9-.6-1.6-1.3-1.3ZM7.4 14.4 18 7.5l-8 8.1" />
   </svg>
 );
+export const InstagramIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <rect x="3" y="3" width="18" height="18" rx="5" />
+    <circle cx="12" cy="12" r="4" />
+    <path d="M17.5 6.5h.01" />
+  </svg>
+);
+export const CallIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M5 4h3.5l1.7 4.3-2.2 1.4a11 11 0 0 0 6.3 6.3l1.4-2.2L20 15.5V19a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" />
+  </svg>
+);
 export const MonitorIcon = (p: IconProps) => (
   <svg {...base(p)}>
     <rect x="3" y="4" width="18" height="12.5" rx="2" />

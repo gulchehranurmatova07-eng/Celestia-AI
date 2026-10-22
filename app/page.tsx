@@ -12,7 +12,8 @@ const organization = {
   foundingDate: String(BRAND.founded),
   founders: BRAND.founders.map((name) => ({ "@type": "Person", name })),
   email: CONTACT.email,
-  sameAs: [CONTACT.telegramUrl],
+  telephone: CONTACT.phone,
+  sameAs: [CONTACT.website, CONTACT.telegramUrl, CONTACT.instagramUrl],
   description: "Web design and development company building modern, fast and secure websites for businesses.",
 };
 
